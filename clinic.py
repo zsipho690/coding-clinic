@@ -39,7 +39,7 @@ class ClinicBookingSystem:
         """Save configuration"""
         with open(CONFIG_FILE, 'w') as f:
             json.dump(self.config, f, indent=2)
-        print(f"✓ Configuration saved to {CONFIG_FILE}")
+        print(f"Configuration saved to {CONFIG_FILE}")
 
     def load_bookings(self):
         """Load bookings database"""
@@ -65,23 +65,23 @@ class ClinicBookingSystem:
         calendar_ids = [cal['id'] for cal in calendars]
 
         if student_calendar not in calendar_ids:
-            print(f"❌ Error: Student calendar '{student_calendar}' not found")
+            print(f"Error: Student calendar '{student_calendar}' not found")
             print("\nAvailable calendars:")
             for cal in calendars:
-                print(f"  • {cal['summary']}: {cal['id']}")
+                print(f"{cal['summary']}: {cal['id']}")
             return
 
         if clinic_calendar not in calendar_ids:
-            print(f"❌ Error: Clinic calendar '{clinic_calendar}' not found")
+            print(f"Error: Clinic calendar '{clinic_calendar}' not found")
             return
 
         self.config['student_calendar'] = student_calendar
         self.config['clinic_calendar'] = clinic_calendar
         self.save_config()
 
-        print(f"✓ Student calendar: {student_calendar}")
-        print(f"✓ Clinic calendar: {clinic_calendar}")
-        print(f"\n✓ Configuration saved to {CONFIG_FILE}\n")
+        print(f"Student calendar: {student_calendar}")
+        print(f"Clinic calendar: {clinic_calendar}")
+        print(f"\nConfiguration saved to {CONFIG_FILE}\n")
 
     # === VIEW COMMAND ===
     def view(self, date=None, status=None):
@@ -91,7 +91,7 @@ class ClinicBookingSystem:
         print("="*70 + "\n")
 
         if not self.bookings:
-            print("📅 No bookings found\n")
+            print("No bookings found\n")
             return
 
         # Filter bookings
@@ -104,7 +104,7 @@ class ClinicBookingSystem:
             filtered = [b for b in filtered if b['status'] == status]
 
         if not filtered:
-            print(f"📅 No bookings found for your filters\n")
+            print(f"No bookings found for your filters\n")
             return
 
         # Group by date
@@ -117,18 +117,11 @@ class ClinicBookingSystem:
         # Display
         for date, bookings_list in sorted(by_date.items()):
             date_obj = datetime.strptime(date, '%Y-%m-%d')
-            print(f"📅 {date_obj.strftime('%A, %B %d, %Y')}")
+            print(f"{date_obj.strftime('%A, %B %d, %Y')}")
             print("-" * 70)
 
             for booking in bookings_list:
-                status_icon = {
-                    'available': '🟢',
-                    'booked': '🔴',
-                    'empty': '⚪'
-                }.get(booking['status'], '⚪')
-
-                print(
-                    f"{status_icon} {booking['time']} - {booking['status'].upper()}")
+                print(f"{booking['time']} - {booking['status'].upper()}")
 
                 if booking['status'] == 'available':
                     print(f"   Volunteer: {booking['volunteer_name']}")
@@ -137,7 +130,7 @@ class ClinicBookingSystem:
                     print(f"   Student: {booking['student_email']}")
                     print(f"   Subject: {booking['subject']}")
 
-                print()
+            print()
 
         # Summary
         total = len(filtered)
@@ -159,12 +152,12 @@ class ClinicBookingSystem:
                         if b['date'] == date and b['time'] == time), None)
 
         if existing and existing.get('volunteer_email') == email:
-            print(f"❌ You already volunteered for {date} at {time}\n")
+            print(f"You already volunteered for {date} at {time}\n")
             return
 
         if existing and existing.get('volunteer_email'):
             print(
-                f"❌ Slot already has volunteer: {existing['volunteer_name']}\n")
+                f"Slot already has volunteer: {existing['volunteer_name']}\n")
             return
 
         # Calculate end time (30 minutes later)
@@ -188,7 +181,7 @@ class ClinicBookingSystem:
         )
 
         if not event_id:
-            print("❌ Failed to create calendar event\n")
+            print("Failed to create calendar event\n")
             return
 
         # Save booking
@@ -207,9 +200,9 @@ class ClinicBookingSystem:
         self.bookings.append(booking)
         self.save_bookings()
 
-        print(f"✓ Volunteered for {date} at {time}")
-        print(f"✓ Event created in calendar")
-        print(f"✓ Status: AVAILABLE\n")
+        print(f"Volunteered for {date} at {time}")
+        print(f"Event created in calendar")
+        print(f"Status: AVAILABLE\n")
 
     # === BOOK COMMAND ===
     def book(self, date, time, subject, description, student_email):
@@ -223,15 +216,15 @@ class ClinicBookingSystem:
                        if b['date'] == date and b['time'] == time), None)
 
         if not booking:
-            print(f"❌ No slot found for {date} at {time}")
+            print(f"No slot found for {date} at {time}")
             print("   Run: python clinic.py view --date {date}\n")
             return
 
         if booking['status'] != 'available':
             if booking['status'] == 'booked':
-                print(f"❌ Slot already booked by {booking['student_email']}\n")
+                print(f"Slot already booked by {booking['student_email']}\n")
             else:
-                print(f"❌ Slot has no volunteer available\n")
+                print(f"Slot has no volunteer available\n")
             return
 
         # Calculate times
@@ -260,7 +253,7 @@ class ClinicBookingSystem:
         )
 
         if not event_id:
-            print("❌ Failed to create booking\n")
+            print("Failed to create booking\n")
             return
 
         # Update booking
@@ -273,10 +266,10 @@ class ClinicBookingSystem:
 
         self.save_bookings()
 
-        print(f"✓ Booked session with {booking['volunteer_name']}")
-        print(f"✓ Date: {date} at {time}")
-        print(f"✓ Subject: {subject}")
-        print(f"✓ Calendar events created\n")
+        print(f"Booked session with {booking['volunteer_name']}")
+        print(f"Date: {date} at {time}")
+        print(f"Subject: {subject}")
+        print(f"Calendar events created\n")
 
     # === CANCEL COMMAND ===
     def cancel(self, date, time, email, is_volunteer=False):
@@ -290,18 +283,18 @@ class ClinicBookingSystem:
                        if b['date'] == date and b['time'] == time), None)
 
         if not booking:
-            print(f"❌ No slot found for {date} at {time}\n")
+            print(f"No slot found for {date} at {time}\n")
             return
 
         if is_volunteer:
             # Cancel volunteer
             if booking.get('volunteer_email') != email:
-                print(f"❌ This is not your volunteer slot\n")
+                print(f"This is not your volunteer slot\n")
                 return
 
             if booking['status'] == 'booked':
                 print(
-                    f"❌ Cannot cancel - slot is booked by {booking['student_email']}")
+                    f"Cannot cancel - slot is booked by {booking['student_email']}")
                 print("   Ask them to cancel their booking first\n")
                 return
 
@@ -313,17 +306,17 @@ class ClinicBookingSystem:
             self.bookings.remove(booking)
             self.save_bookings()
 
-            print(f"✓ Canceled volunteer slot for {date} at {time}")
-            print(f"✓ Slot removed from calendar\n")
+            print(f"Canceled volunteer slot for {date} at {time}")
+            print(f"Slot removed from calendar\n")
 
         else:
             # Cancel booking
             if booking['status'] != 'booked':
-                print(f"❌ Slot is not booked\n")
+                print(f"Slot is not booked\n")
                 return
 
             if booking.get('student_email') != email:
-                print(f"❌ This is not your booking\n")
+                print(f"This is not your booking\n")
                 return
 
             # Delete booking event
@@ -357,8 +350,8 @@ class ClinicBookingSystem:
 
             self.save_bookings()
 
-            print(f"✓ Canceled booking for {date} at {time}")
-            print(f"✓ Slot now available again\n")
+            print(f"Canceled booking for {date} at {time}")
+            print(f"Slot now available again\n")
 
 
 def main():
