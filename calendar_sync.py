@@ -30,20 +30,20 @@ CREDS_FILE = SCRIPT_DIR / 'secrets' / 'credentials.json'
 
 class CalendarSync:
     """Handles all Google Calendar operations"""
-    
+
     def __init__(self):
         self.service = None
         self.authenticate()
-    
+
     def authenticate(self):
         """Authenticate with Google Calendar"""
         creds = None
-        
+
         # Load existing token
         if os.path.exists(TOKEN_FILE):
             with open(TOKEN_FILE, 'rb') as token:
                 creds = pickle.load(token)
-        
+
         # Refresh or get new credentials
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
@@ -53,30 +53,31 @@ class CalendarSync:
                     print(f"Error: {CREDS_FILE} not found!")
                     print("   Download credentials from Google Cloud Console")
                     sys.exit(1)
-                
-                flow = InstalledAppFlow.from_client_secrets_file(CREDS_FILE, SCOPES)
+
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    CREDS_FILE, SCOPES)
                 creds = flow.run_local_server(port=0)
-            
+
             # Save token
             with open(TOKEN_FILE, 'wb') as token:
                 pickle.dump(creds, token)
-        
+
         self.service = build('calendar', 'v3', credentials=creds)
         print("Connected to Google Calendar")
-    
+
     def get_calendars(self):
         """List all accessible calendars"""
         if not self.service:
             print("Error: Not authenticated")
             return []
-        
+
         try:
             calendar_list = self.service.calendarList().list().execute()
             return calendar_list.get('items', [])
         except Exception as e:
             print(f"Error fetching calendars: {e}")
             return []
-    
+
     def get_events(self, calendar_id, days=7):
         """Get events from calendar for next N days"""
         if not self.service:
@@ -86,7 +87,7 @@ class CalendarSync:
         try:
             now = datetime.utcnow()
             end = now + timedelta(days=days)
-            
+
             events_result = self.service.events().list(
                 calendarId=calendar_id,
                 timeMin=now.isoformat() + 'Z',
@@ -94,18 +95,18 @@ class CalendarSync:
                 singleEvents=True,
                 orderBy='startTime'
             ).execute()
-            
+
             return events_result.get('items', [])
         except Exception as e:
             print(f"Error fetching events: {e}")
             return []
-    
+
     def create_event(self, calendar_id, summary, description, start_time, end_time, attendees=None):
         """Create a calendar event"""
         if not self.service:
             print("Error: Not authenticated")
             return None
-        
+
         event = {
             'summary': summary,
             'description': description,
@@ -119,10 +120,21 @@ class CalendarSync:
                 ],
             },
         }
-        #update the list comprehension into readable for loop
         if attendees:
-            event['attendees'] = [{'email': email} for email in attendees]
-        
+            # Create empty list to store attendee dictionaries
+            attendee_list = []
+
+            # Loop through each email in attendees
+            for email in attendees:
+                # Create dictionary for this attendee
+                attendee_dict = {'email': email}
+
+                # Add to list
+                attendee_list.append(attendee_dict)
+
+            # Assign the list to event
+            event['attendees'] = attendee_list
+
         try:
             created_event = self.service.events().insert(
                 calendarId=calendar_id,
@@ -133,13 +145,13 @@ class CalendarSync:
         except Exception as e:
             print(f"Error creating event: {e}")
             return None
-    
+
     def delete_event(self, calendar_id, event_id):
         """Delete a calendar event"""
         if not self.service:
             print("Error: Not authenticated")
             return False
-        
+
         try:
             self.service.events().delete(
                 calendarId=calendar_id,
@@ -155,10 +167,10 @@ if __name__ == "__main__":
     # Test the connection
     print("Testing Google Calendar connection...\n")
     sync = CalendarSync()
-    
+
     calendars = sync.get_calendars()
     print(f"\nFound {len(calendars)} calendar(s):\n")
-    
+
     for cal in calendars:
         print(f"{cal['summary']}")
         print(f"ID: {cal['id']}")
