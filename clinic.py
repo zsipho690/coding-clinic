@@ -62,7 +62,11 @@ class ClinicBookingSystem:
 
         # Verify calendars exist
         calendars = self.sync.get_calendars()
-        calendar_ids = [cal['id'] for cal in calendars]
+
+        # Build list of calendar IDs (normal for loop instead of list comprehension)
+        calendar_ids = []
+        for cal in calendars:
+            calendar_ids.append(cal['id'])
 
         if student_calendar not in calendar_ids:
             print(f"Error: Student calendar '{student_calendar}' not found")
@@ -97,11 +101,21 @@ class ClinicBookingSystem:
         # Filter bookings
         filtered = self.bookings
 
+        # Filter by date (normal for loop instead of list comprehension)
         if date:
-            filtered = [b for b in filtered if b['date'] == date]
+            date_filtered = []
+            for b in filtered:
+                if b['date'] == date:
+                    date_filtered.append(b)
+            filtered = date_filtered
 
+        # Filter by status (normal for loop instead of list comprehension)
         if status:
-            filtered = [b for b in filtered if b['status'] == status]
+            status_filtered = []
+            for b in filtered:
+                if b['status'] == status:
+                    status_filtered.append(b)
+            filtered = status_filtered
 
         if not filtered:
             print(f"No bookings found for your filters\n")
@@ -121,6 +135,7 @@ class ClinicBookingSystem:
             print("-" * 70)
 
             for booking in bookings_list:
+                # Show status without emojis
                 print(f"{booking['time']} - {booking['status'].upper()}")
 
                 if booking['status'] == 'available':
@@ -130,12 +145,24 @@ class ClinicBookingSystem:
                     print(f"   Student: {booking['student_email']}")
                     print(f"   Subject: {booking['subject']}")
 
-            print()
+                print()
 
-        # Summary
+        # Summary - count available and booked (normal for loops instead of list comprehensions)
         total = len(filtered)
-        available = len([b for b in filtered if b['status'] == 'available'])
-        booked = len([b for b in filtered if b['status'] == 'booked'])
+
+        available_count = 0
+        for b in filtered:
+            if b['status'] == 'available':
+                available_count += 1
+
+        booked_count = 0
+        for b in filtered:
+            if b['status'] == 'booked':
+                booked_count += 1
+
+        available = available_count
+        booked = booked_count
+
         print("-" * 70)
         print(
             f"Summary: {available} Available | {booked} Booked | {total} Total\n")
@@ -217,7 +244,7 @@ class ClinicBookingSystem:
 
         if not booking:
             print(f"No slot found for {date} at {time}")
-            print("   Run: python clinic.py view --date {date}\n")
+            print(f"   Run: python clinic.py view --date {date}\n")
             return
 
         if booking['status'] != 'available':
